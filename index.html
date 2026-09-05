@@ -475,8 +475,8 @@
     color:var(--text-soft);
   }
   .submit-status.sent{color:var(--teal);}
-  .btn-whatsapp{
-    background:#25D366;
+  .btn-share{
+    background:var(--navy);
     color:#fff;
     border:none;
     border-radius:99px;
@@ -489,7 +489,8 @@
     align-items:center;
     gap:8px;
   }
-  .btn-whatsapp:hover{background:#1EBE5A;}
+  .btn-share:hover{background:var(--navy-deep);}
+  .btn-share:disabled{opacity:0.6; cursor:default;}
   .closing-text{
     text-align:center;
     font-size:14px;
@@ -598,8 +599,7 @@
 
 </div>
 
-<script>
-const questions = [
+<script>const questions = [
   { q:"Quand plusieurs tâches urgentes tombent en même temps, je...", o:[
     "Je prends les devants et je décide vite, quitte à trancher seule",
     "Je cherche à qui en parler pour trouver de l'énergie et de l'aide",
@@ -703,3 +703,525 @@ const questions = [
 ];
 
 // index 0->D, 1->I, 2->S, 3->C, consistent across every question
+const codeByIndex = ["D","I","S","C"];
+
+const tieBreakers = {
+  D: "Face à un imprévu de dernière minute, je préfère agir tout de suite, quitte à ajuster en cours de route.",
+  I: "Face à un imprévu de dernière minute, je préfère en parler à quelqu'un avant d'agir.",
+  S: "Face à un imprévu de dernière minute, je préfère laisser retomber la pression avant de réagir.",
+  C: "Face à un imprévu de dernière minute, je préfère d'abord comprendre calmement ce qui s'est passé."
+};
+
+const profiles = {
+  D:{
+    name:"Dominante",
+    color:"var(--D)",
+    restitution:"Tu es probablement une femme qui avance, qui décide, qui n'attend pas qu'on lui dise quoi faire. C'est une vraie force — dans ta famille, ton travail, ton ministère, tu es souvent celle qui fait bouger les choses. Mais cette force a un revers : tu as tendance à tout porter seule, parce que déléguer te donne l'impression de perdre le contrôle. Ta surcharge ne vient pas du fait que tu as trop à faire — elle vient du fait que tu refuses de partager ce que tu as à faire. Le signe qui doit t'alerter, c'est l'irritabilité : quand tu deviens impatiente avec les autres, ce n'est pas eux le problème, c'est ta charge qui déborde.",
+    forces:["Détermination","Esprit de décision","Orientation résultats","Capacité à prendre des initiatives","Résistance à la pression"],
+    faiblesses:["Impatience","Difficulté à déléguer","Tendance à tout contrôler","Dureté envers les plus lents","Refus de s'arrêter"],
+    ampli:[
+      "Utilise ta capacité de décision pour trancher aussi sur ce que tu vas <em>arrêter</em> de faire, pas seulement sur ce que tu vas entreprendre.",
+      "Fixe-toi un objectif clair par jour plutôt que dix — ta force, c'est l'impact, pas le volume.",
+      "Sers-toi de ton influence naturelle pour entraîner une équipe autour de toi, au lieu de porter le projet seule."
+    ],
+    controle:[
+      "Avant d'agir seule, demande-toi : « Est-ce que je fais ça parce que je suis la seule à pouvoir le faire, ou parce que je n'ai pas envie de lâcher le contrôle ? »",
+      "Délègue une tâche par semaine à quelqu'un, même imparfaitement — considère ça comme un entraînement, pas un risque.",
+      "Programme un vrai temps d'arrêt dans ton agenda, comme un rendez-vous non négociable, pas comme une option."
+    ]
+  },
+  I:{
+    name:"Influente",
+    color:"var(--I)",
+    restitution:"Tu es celle qui apporte de la chaleur, de l'énergie, qui donne envie aux autres de s'impliquer. On a besoin de ton enthousiasme — sans lui, beaucoup de choses ne démarreraient jamais. Mais ton enthousiasme peut te jouer des tours : tu dis oui trop facilement, par peur de décevoir ou par envie de faire plaisir, et tu te retrouves engagée dans plus de choses que tu n'en peux porter. Ta surcharge, à toi, c'est la dispersion — tu commences beaucoup, tu termines peu, et ça te pèse en silence même si tu souris.",
+    forces:["Enthousiasme","Sens du contact","Capacité à motiver","Optimisme","Aisance relationnelle"],
+    faiblesses:["Difficulté à dire non","Dispersion","Manque de suivi","Besoin de validation","Désorganisation"],
+    ampli:[
+      "Mets ton énergie relationnelle au service d'un seul projet à la fois plutôt que de la disperser sur plusieurs fronts.",
+      "Utilise ta capacité à motiver pour entraîner d'autres personnes à porter une charge avec toi, au lieu de tout initier seule.",
+      "Célèbre les petites victoires en cours de route — ça nourrit ton énergie sans attendre la fin du projet pour te sentir bien."
+    ],
+    controle:[
+      "Avant de dire oui à un nouvel engagement, laisse passer 24h — ton enthousiasme du moment n'est pas toujours ta meilleure conseillère.",
+      "Note tes engagements par écrit et relis-les chaque semaine : ce qui n'est pas écrit se disperse vite dans ta tête.",
+      "Choisis une seule personne à qui tu rends des comptes sur tes priorités, pour t'aider à filtrer ce qui mérite vraiment ton oui."
+    ]
+  },
+  S:{
+    name:"Stable",
+    color:"var(--S)",
+    restitution:"Tu es le pilier discret. Celle sur qui on peut compter, celle qui écoute, qui absorbe les tensions pour que les autres autour d'elle restent en paix. C'est une force rare, et souvent peu reconnue. Le problème, c'est que tu portes tout ça en silence. Tu ne dis pas non, tu n'exprimes pas ce qui te pèse, et ta surcharge s'installe sans bruit — jusqu'au jour où tu craques, souvent sans que personne ne l'ait vu venir. Le signal à surveiller chez toi, c'est justement ce silence : quand tu te retires, quand tu n'as plus rien à dire, c'est que tu es déjà pleine.",
+    forces:["Fiabilité","Écoute","Patience","Loyauté","Capacité à apaiser les tensions"],
+    faiblesses:["Difficulté à dire non","Évitement du conflit","Silence sur ses propres besoins","Résistance passive au changement"],
+    ampli:[
+      "Utilise ta capacité d'écoute avec des limites claires : tu peux entendre la charge de l'autre sans systématiquement la prendre sur toi.",
+      "Fais de ta fiabilité un choix conscient, pas un réflexe — engage-toi sur ce que tu as vraiment évalué pouvoir tenir.",
+      "Propose ta stabilité comme un soutien ponctuel et nommé, plutôt que comme une disponibilité permanente et implicite."
+    ],
+    controle:[
+      "Entraîne-toi à dire une phrase simple quand tu es sollicitée : « Je dois y réfléchir avant de répondre » — ça t'évite le oui automatique.",
+      "Nomme à voix haute une charge que tu portes en silence, à une personne de confiance, avant qu'elle ne devienne trop lourde.",
+      "Accepte qu'un désaccord exprimé à temps coûte moins cher qu'une tension accumulée en silence."
+    ]
+  },
+  C:{
+    name:"Consciencieuse",
+    color:"var(--C)",
+    restitution:"Tu es celle qui fait les choses bien, avec rigueur, avec soin. On te confie ce qui compte parce qu'on sait que tu ne bâcleras rien. C'est une qualité précieuse, surtout dans un monde qui va trop vite. Mais cette exigence, quand elle n'a plus de limite, devient du perfectionnisme — et le perfectionnisme, c'est une surcharge qui n'a jamais de fin, parce que « bien fait » n'est jamais tout à fait suffisant pour toi. Le signal à surveiller, c'est l'anxiété : quand tu rumines un détail plus que le résultat ne le mérite, c'est que ton exigence a dépassé sa fonction.",
+    forces:["Rigueur","Sens du détail","Fiabilité dans la qualité","Esprit d'analyse","Exigence"],
+    faiblesses:["Perfectionnisme","Lenteur à démarrer ou conclure","Autocritique excessive","Difficulté à lâcher prise"],
+    ampli:[
+      "Réserve ta rigueur pour les tâches qui comptent vraiment, et assume consciemment un niveau « suffisant » pour le reste.",
+      "Transforme ton sens du détail en un atout de relecture finale plutôt qu'un frein à chaque étape du processus.",
+      "Utilise ton esprit d'analyse pour identifier à l'avance ce qui est essentiel, et concentre ton énergie dessus."
+    ],
+    controle:[
+      "Fixe-toi une limite de temps avant de commencer une tâche, et arrête-toi quand elle est atteinte, même si tu pourrais « encore améliorer ».",
+      "Remplace la question « est-ce parfait ? » par « est-ce que ça remplit son objectif ? »",
+      "Note chaque jour une chose que tu as accomplie sans la refaire ni la retoucher — pour réapprendre à faire confiance à ton travail."
+    ]
+  }
+};
+
+let current = 0;let answers = new Array(questions.length).fill(null);
+let participant = {};
+
+const qText = document.getElementById('qText');
+const qOptions = document.getElementById('qOptions');
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+const backBtn = document.getElementById('backBtn');
+const identityView = document.getElementById('identityView');
+const quizView = document.getElementById('quizView');
+const resultView = document.getElementById('resultView');
+const headerTitle = document.getElementById('headerTitle');
+const headerIntro = document.getElementById('headerIntro');
+
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  const name = document.getElementById('idName').value.trim();
+  const phone = document.getElementById('idPhone').value.trim();
+  const consent = document.getElementById('idConsent').checked;
+  const errorEl = document.getElementById('idError');
+
+  if(!name || !phone){
+    errorEl.textContent = "Merci de renseigner au moins ton nom et ton téléphone.";
+    return;
+  }
+  if(!consent){
+    errorEl.textContent = "Merci de cocher la case de consentement pour continuer.";
+    return;
+  }
+  errorEl.textContent = "";
+
+  participant = {
+    name,
+    phone,
+    email: document.getElementById('idEmail').value.trim(),
+    church: document.getElementById('idChurch').value.trim(),
+    status: document.getElementById('idStatus').value,
+    age: document.getElementById('idAge').value
+  };
+
+  identityView.classList.add('hidden');
+  quizView.classList.remove('hidden');
+  headerIntro.textContent = "Pour chaque situation, choisis la réponse qui te ressemble le plus naturellement, sans trop réfléchir. Il n'y a pas de bonne ou de mauvaise réponse.";
+  renderQuestion();
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+function renderQuestion(){
+  const item = questions[current];
+  qText.textContent = (current+1) + ". " + item.q;
+  qOptions.innerHTML = "";
+  item.o.forEach((opt, i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'option' + (answers[current]===i ? ' selected':'');
+    btn.textContent = opt;
+    btn.addEventListener('click', ()=> selectAnswer(i));
+    qOptions.appendChild(btn);
+  });
+  progressFill.style.width = Math.round(((current)/questions.length)*100 + 5) + "%";
+  progressLabel.textContent = (current+1) + " / " + questions.length;
+  backBtn.classList.toggle('visible', current>0);
+}
+
+let advancing = false;
+
+function selectAnswer(i){
+  if(advancing) return;
+  advancing = true;
+  answers[current] = i;
+  renderQuestion();
+  Array.from(qOptions.children).forEach(btn=>btn.disabled = true);
+  setTimeout(()=>{
+    advancing = false;
+    if(current < questions.length - 1){
+      current++;
+      renderQuestion();
+    } else {
+      proceedToResults();
+    }
+  }, 220);
+}
+
+backBtn.addEventListener('click', ()=>{
+  if(current>0){
+    current--;
+    renderQuestion();
+  }
+});
+
+const tiebreakView = document.getElementById('tiebreakView');
+const tbOptions = document.getElementById('tbOptions');
+let tieBonusCode1 = null; // départage entre le 1er et le 2e
+let tieBonusCode2 = null; // départage entre le 2e et le 3e
+
+function proceedToResults(){
+  const scores = computeScores();
+  const sorted = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+
+  if(sorted[0][1] === sorted[1][1] && !tieBonusCode1){
+    showTieBreaker(sorted[0][0], sorted[1][0], 1);
+    return;
+  }
+  if(sorted[1][1] === sorted[2][1] && !tieBonusCode2){
+    showTieBreaker(sorted[1][0], sorted[2][0], 2);
+    return;
+  }
+  showResults();
+}
+
+function showTieBreaker(codeA, codeB, stage){
+  quizView.classList.add('hidden');
+  tiebreakView.classList.remove('hidden');
+  headerIntro.textContent = stage === 1
+    ? "Tes deux tempéraments les plus forts sont très proches — cette question permet de trancher."
+    : "Tes 2e et 3e tempéraments sont très proches — une dernière question pour les départager.";
+  tbOptions.innerHTML = "";
+  let tbAnswered = false;
+  [codeA, codeB].forEach(code=>{
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = tieBreakers[code];
+    btn.addEventListener('click', ()=>{
+      if(tbAnswered) return;
+      tbAnswered = true;
+      Array.from(tbOptions.children).forEach(b=>b.disabled = true);
+      if(stage === 1) tieBonusCode1 = code; else tieBonusCode2 = code;
+      tiebreakView.classList.add('hidden');
+      proceedToResults();
+    });
+    tbOptions.appendChild(btn);
+  });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function computeScores(){
+  const scores = {D:0,I:0,S:0,C:0};
+  answers.forEach(a=>{
+    if(a!==null) scores[codeByIndex[a]]++;
+  });
+  if(tieBonusCode1) scores[tieBonusCode1] += 1;
+  if(tieBonusCode2) scores[tieBonusCode2] += 1;
+  return scores;
+}
+
+function showResults(){
+  quizView.classList.add('hidden');
+  headerTitle.innerHTML = "Ton résultat";
+  headerIntro.textContent = "Voici ce que tes deux tempéraments dominants révèlent sur ta manière de vivre la charge mentale — et comment en prendre soin.";
+
+  const scores = computeScores();
+  const total = questions.length;
+  const sorted = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+  const [topCode, topScore] = sorted[0];
+  const [secondCode, secondScore] = sorted[1];
+
+  const top = profiles[topCode];
+  const second = profiles[secondCode];
+
+  let barsHtml = sorted.map(([code,score])=>{
+    const p = profiles[code];
+    const pct = Math.round((score/total)*100);
+    return `<div class="bar-row">
+      <span class="bar-label" style="color:${p.color}">${p.name}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${p.color}"></div></div>
+      <span class="bar-value">${score}/${total}</span>
+    </div>`;
+  }).join("");
+
+  function profileBlock(code){
+    const p = profiles[code];
+    return `
+      <div class="restitution" style="--accent:${p.color}">
+        ${p.restitution}
+      </div>
+      <div class="section-card fw-grid" style="display:grid;">
+        <div>
+          <span class="label">Forces</span>
+          <ul>${p.forces.map(f=>`<li>${f}</li>`).join("")}</ul>
+        </div>
+        <div>
+          <span class="label">Faiblesses</span>
+          <ul>${p.faiblesses.map(f=>`<li>${f}</li>`).join("")}</ul>
+        </div>
+      </div>
+      <div class="section-card">
+        <h3>En lien avec la charge mentale</h3>
+        <div class="tips-grid">
+          <div class="tips-col amp">
+            <h4 style="color:${p.color}">Amplifier tes forces</h4>
+            <ol>${p.ampli.map(t=>`<li>${t}</li>`).join("")}</ol>
+          </div>
+          <div class="tips-col control">
+            <h4>Maîtriser tes fragilités</h4>
+            <ol>${p.controle.map(t=>`<li>${t}</li>`).join("")}</ol>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function secondaryBlock(code){
+    const p = profiles[code];
+    return `
+      <div class="section-card" style="border-left:4px solid ${p.color};">
+        <span class="label" style="color:${p.color};">Ton tempérament secondaire — ${p.name}</span>
+        <p style="font-size:14px; line-height:1.65; margin:10px 0 14px; color:var(--text);">${p.restitution}</p>
+        <div class="fw-grid" style="display:grid;">
+          <div>
+            <span class="label">Forces</span>
+            <ul>${p.forces.map(f=>`<li>${f}</li>`).join("")}</ul>
+          </div>
+          <div>
+            <span class="label">Faiblesses</span>
+            <ul>${p.faiblesses.map(f=>`<li>${f}</li>`).join("")}</ul>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+
+  const todayStr = new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+
+  resultView.innerHTML = `
+    <p class="submit-status" id="submitStatus">Enregistrement de tes informations...</p>
+    <div id="resultContent" style="background:var(--bg);">
+      <p class="participant-summary">${participant.name || ''}${participant.church ? ' · '+participant.church : ''} · ${todayStr}</p>
+      <div class="result-header">
+        <p class="eyebrow" style="color:${top.color}">Ton tempérament dominant</p>
+        <h1 style="color:${top.color}">${top.name}</h1>
+      </div>
+      <div class="bars">${barsHtml}</div>
+      ${profileBlock(topCode)}
+      ${secondaryBlock(secondCode)}
+      <p class="closing-text">Ce test n'est qu'un point de départ. Si tu sens le besoin d'aller plus loin dans la connaissance de toi-même et la gestion de ta charge mentale, le <a href="https://www.facebook.com/share/14oqFXQP3aj/" target="_blank" rel="noopener" style="color:var(--navy); font-weight:600; text-decoration:underline;">Ministère des Femmes d'Impact de Cotonou</a> peut t'accompagner plus en profondeur.</p>
+    </div>
+    <div class="restart-wrap">
+      <button class="btn-download" id="downloadBtn">⬇ Télécharger mes résultats</button>
+      <button class="btn-share" id="shareBtn">📤 Partager mes résultats</button>
+      <button class="btn-restart" id="restartBtn">Recommencer le test</button>
+    </div>
+    <p class="download-note">Le document est enregistré au format PDF, sur ton téléphone ou ton ordinateur.</p>
+  `;
+  resultView.classList.remove('hidden');
+  document.getElementById('restartBtn').addEventListener('click', restart);
+  document.getElementById('downloadBtn').addEventListener('click', downloadResults);
+  document.getElementById('shareBtn').addEventListener('click', ()=> shareResult(top.name, second.name));
+  registerResult(topCode, secondCode, scores);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+const JOTFORM_FORM_ID = "262468588800064";
+const JOTFORM_API_KEY = "b7132dd46d07e5d871fb9be0465d336c";
+let resultsSubmitted = false;
+
+async function registerResult(topCode, secondCode, scores){
+  if(resultsSubmitted) return;
+  resultsSubmitted = true;
+
+  const statusEl = document.getElementById('submitStatus');
+
+  try{
+    const qRes = await fetch(`https://api.jotform.com/form/${JOTFORM_FORM_ID}/questions?apiKey=${JOTFORM_API_KEY}`);
+    const qData = await qRes.json();
+    const questions = qData.content || {};
+
+    const findQid = (label) => Object.keys(questions).find(qid =>
+      (questions[qid].text || "").toLowerCase().includes(label.toLowerCase())
+    );
+
+    const params = new URLSearchParams();
+
+    const nameQid = findQid("nom et prénoms");
+    if(nameQid){
+      const parts = (participant.name || "").trim().split(/\s+/);
+      const first = parts.shift() || "";
+      const last = parts.join(" ");
+      params.append(`submission[${nameQid}][first]`, first);
+      params.append(`submission[${nameQid}][last]`, last);
+    }
+
+    const phoneQid = findQid("téléphone");
+    if(phoneQid) params.append(`submission[${phoneQid}]`, participant.phone || "");
+
+    const emailQid = findQid("e-mail");
+    if(emailQid) params.append(`submission[${emailQid}]`, participant.email || "");
+
+    const churchQid = findQid("église");
+    if(churchQid) params.append(`submission[${churchQid}]`, participant.church || "");
+
+    const statusQid = findQid("statut");
+    if(statusQid) params.append(`submission[${statusQid}]`, participant.status || "");
+
+    const ageQid = findQid("tranche d'âge");
+    if(ageQid) params.append(`submission[${ageQid}]`, participant.age || "");
+
+    const tempQid = findQid("tempérament dominant");
+    if(tempQid) params.append(`submission[${tempQid}]`, profiles[topCode].name);
+
+    const secondTempQid = findQid("tempérament secondaire");
+    if(secondTempQid) params.append(`submission[${secondTempQid}]`, profiles[secondCode].name);
+
+    const scoreQids = { D: findQid("score d"), I: findQid("score i"), S: findQid("score s"), C: findQid("score c") };
+    Object.keys(scoreQids).forEach(code=>{
+      if(scoreQids[code]) params.append(`submission[${scoreQids[code]}]`, scores[code]);
+    });
+
+    const dateQid = findQid("date du test");
+    if(dateQid){
+      const today = new Date();
+      params.append(`submission[${dateQid}][month]`, String(today.getMonth()+1).padStart(2,'0'));
+      params.append(`submission[${dateQid}][day]`, String(today.getDate()).padStart(2,'0'));
+      params.append(`submission[${dateQid}][year]`, today.getFullYear());
+    }
+
+    const subRes = await fetch(`https://api.jotform.com/form/${JOTFORM_FORM_ID}/submissions?apiKey=${JOTFORM_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params
+    });
+    const subData = await subRes.json();
+
+    if(subData && subData.responseCode === 200){
+      if(statusEl){
+        statusEl.textContent = "✓ Tes informations ont bien été transmises";
+        statusEl.classList.add('sent');
+      }
+    } else {
+      throw new Error("Échec de la soumission Jotform");
+    }
+  } catch(err){
+    resultsSubmitted = false;
+    if(statusEl){
+      statusEl.textContent = "Ton résultat est prêt (transmission en attente — vérifie ta connexion).";
+    }
+  }
+}
+
+async function buildPdf(){
+  const target = document.getElementById('resultContent');
+  const canvas = await html2canvas(target, {
+    scale: 2,
+    backgroundColor: '#FBF3E7',
+    useCORS: true
+  });
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const imgWidth = pageWidth;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+  const imgData = canvas.toDataURL('image/png');
+  let heightLeft = imgHeight;
+  let position = 0;
+
+  pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+  heightLeft -= pageHeight;
+
+  while (heightLeft > 0) {
+    position = heightLeft - imgHeight;
+    pdf.addPage();
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+  }
+
+  const safeName = (participant.name || 'participante').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+  return { pdf, filename: `resultat-temperament-${safeName}.pdf` };
+}
+
+function downloadResults(){
+  const btn = document.getElementById('downloadBtn');
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Préparation du document...";
+
+  buildPdf().then(({ pdf, filename }) => {
+    pdf.save(filename);
+    btn.disabled = false;
+    btn.textContent = original;
+  }).catch(() => {
+    btn.disabled = false;
+    btn.textContent = original;
+    alert("Le téléchargement n'a pas fonctionné. Vérifie ta connexion internet et réessaie.");
+  });
+}
+
+async function shareResult(temperamentName, secondaryName){
+  const btn = document.getElementById('shareBtn');
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Préparation...";
+
+  try{
+    const { pdf, filename } = await buildPdf();
+    const blob = pdf.output('blob');
+    const file = new File([blob], filename, { type: 'application/pdf' });
+
+    if(navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({
+        files: [file],
+        title: 'Mon résultat — Tempéraments & charge mentale',
+        text: `Mon profil : ${temperamentName} / ${secondaryName}`
+      });
+    } else {
+      pdf.save(filename);
+      alert("Ton téléphone ne permet pas le partage direct — le PDF a été téléchargé, tu peux le partager depuis tes fichiers.");
+    }
+  } catch(err){
+    if(err.name !== 'AbortError'){
+      alert("Le partage n'a pas fonctionné. Réessaie, ou utilise le bouton Télécharger.");
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+}
+
+
+function restart(){
+  current = 0;
+  answers = new Array(questions.length).fill(null);
+  tieBonusCode1 = null;
+  tieBonusCode2 = null;
+  advancing = false;
+  resultsSubmitted = false;
+  tiebreakView.classList.add('hidden');
+  resultView.classList.add('hidden');
+  resultView.innerHTML = "";
+  quizView.classList.remove('hidden');
+  headerTitle.innerHTML = "Tempéraments &amp; charge mentale";
+  headerIntro.textContent = "Pour chaque situation, choisis la réponse qui te ressemble le plus naturellement, sans trop réfléchir. Il n'y a pas de bonne ou de mauvaise réponse.";
+  renderQuestion();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+</script>
+</body>
+</html>

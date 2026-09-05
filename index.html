@@ -491,6 +491,21 @@
   }
   .btn-share:hover{background:var(--navy-deep);}
   .btn-share:disabled{opacity:0.6; cursor:default;}
+  .btn-whatsapp{
+    background:#25D366;
+    color:#fff;
+    border:none;
+    border-radius:99px;
+    padding:13px 28px;
+    font-size:14.5px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .btn-whatsapp:hover{background:#1EBE5A;}
   .closing-text{
     text-align:center;
     font-size:14px;
@@ -704,6 +719,8 @@
 
 // index 0->D, 1->I, 2->S, 3->C, consistent across every question
 const codeByIndex = ["D","I","S","C"];
+
+const TEST_URL = "https://tinyurl.com/temperaments-chargementale";
 
 const tieBreakers = {
   D: "Face à un imprévu de dernière minute, je préfère agir tout de suite, quitte à ajuster en cours de route.",
@@ -1021,6 +1038,7 @@ function showResults(){
     <div class="restart-wrap">
       <button class="btn-download" id="downloadBtn">⬇ Télécharger mes résultats</button>
       <button class="btn-share" id="shareBtn">📤 Partager mes résultats</button>
+      <button class="btn-whatsapp" id="whatsappBtn">Partager via WhatsApp</button>
       <button class="btn-restart" id="restartBtn">Recommencer le test</button>
     </div>
     <p class="download-note">Le document est enregistré au format PDF, sur ton téléphone ou ton ordinateur.</p>
@@ -1029,6 +1047,7 @@ function showResults(){
   document.getElementById('restartBtn').addEventListener('click', restart);
   document.getElementById('downloadBtn').addEventListener('click', downloadResults);
   document.getElementById('shareBtn').addEventListener('click', ()=> shareResult(top.name, second.name));
+  document.getElementById('whatsappBtn').addEventListener('click', ()=> shareOnWhatsapp(top.name, second.name));
   registerResult(topCode, secondCode, scores);
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -1202,6 +1221,11 @@ async function shareResult(temperamentName, secondaryName){
     btn.disabled = false;
     btn.textContent = original;
   }
+}
+
+function shareOnWhatsapp(temperamentName, secondaryName){
+  const msg = `J'ai fait le test "Tempéraments & charge mentale" à La Pause (Femmes d'Impact) ✨\nMon profil : ${temperamentName} / ${secondaryName}\nFais le test toi aussi : ${TEST_URL}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 

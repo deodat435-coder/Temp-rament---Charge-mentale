@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tempéraments et charge mentale — La Pause</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Poppins:wght@400;500;600;700&family=Poppins:ital@1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<style>
+  :root{
+    --navy:#0D1B2A;
+    --navy-deep:#081521;
+    --coral:#EF5B3B;
+    --coral-soft:#FDE4DD;
+    --gold:#F2A93B;
+    --magenta:#D6408F;
+    --purple:#8B5FBF;
+    --teal:#2BB6A9;
+    --bg:#FBF3E7;
+    --card:#FFFFFF;
+    --text:#20241F;
+    --text-soft:#6B6459;
+    --line:#EFE3D2;
+
+    --D:#EF5B3B;
+    --I:#F2A93B;
+    --S:#2BB6A9;
+    --C:#8B5FBF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    font-family:'Poppins',sans-serif;
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:32px 16px 64px;
+  }
+  .font-display{font-family:'Fredoka',sans-serif;}
+  .app{
+    width:100%;
+    max-width:640px;
+  }
+
+  /* Header */
+  .header{
+    position:relative;
+    background:linear-gradient(180deg,#EAF3FB 0%,#FBF3E7 100%);
+    border:1px solid var(--line);
+    border-radius:22px;
+    padding:30px 26px 26px;
+    color:var(--navy);
+    overflow:hidden;
+    margin-bottom:22px;
+  }
+  .header .sticker{
+    position:absolute;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    color:#fff;
+    font-size:15px;
+    box-shadow:0 6px 14px rgba(0,0,0,0.12);
+  }
+  .sticker.heart{
+    top:14px; right:18px;
+    width:38px; height:38px;
+    background:var(--coral);
+    transform:rotate(8deg);
+  }
+  .sticker.dot1{ top:16px; left:-10px; width:22px; height:22px; background:var(--gold); }
+  .sticker.dot2{ bottom:-12px; right:60px; width:16px; height:16px; background:var(--teal); }
+  .eyebrow{
+    display:inline-block;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--coral);
+    background:var(--coral-soft);
+    padding:5px 12px;
+    border-radius:99px;
+    margin:0 0 12px;
+  }
+  h1.title{
+    font-family:'Fredoka',sans-serif;
+    font-size:30px;
+    font-weight:600;
+    margin:0 0 10px;
+    line-height:1.25;
+    position:relative;
+    background:linear-gradient(90deg,var(--magenta) 0%,var(--purple) 22%,var(--coral) 45%,var(--gold) 68%,var(--teal) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    max-width:460px;
+  }
+  .intro-text{
+    font-size:14.5px;
+    line-height:1.6;
+    color:var(--text-soft);
+    margin:0;
+    max-width:460px;
+    position:relative;
+  }
+
+  /* Progress */
+  .progress-wrap{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:0 0 20px;
+  }
+  .progress-track{
+    flex:1;
+    height:6px;
+    background:var(--line);
+    border-radius:99px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--coral),var(--gold));
+    border-radius:99px;
+    transition:width .35s ease;
+  }
+  .progress-label{
+    font-size:13px;
+    color:var(--text-soft);
+    font-weight:600;
+    white-space:nowrap;
+  }
+
+  /* Question card */
+  .card{
+    background:var(--card);
+    border-radius:20px;
+    padding:26px 24px;
+    box-shadow:0 1px 3px rgba(20,20,10,0.06), 0 10px 26px rgba(20,20,10,0.05);
+  }
+  .q-text{
+    font-size:18px;
+    font-weight:600;
+    line-height:1.45;
+    margin:0 0 20px;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .option{
+    text-align:left;
+    border:1.5px solid var(--line);
+    background:#FFFDF9;
+    border-radius:14px;
+    padding:14px 16px;
+    font-size:15px;
+    font-family:inherit;
+    color:var(--text);
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease, transform .1s ease;
+    line-height:1.45;
+  }
+  .option:hover{
+    border-color:var(--coral);
+    background:var(--coral-soft);
+  }
+  .option:active{
+    transform:scale(0.99);
+  }
+  .option.selected{
+    border-color:var(--coral);
+    background:var(--coral-soft);
+  }
+
+  .nav-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:20px;
+  }
+  .btn-text{
+    background:none;
+    border:none;
+    color:var(--text-soft);
+    font-size:14px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    padding:8px 4px;
+    visibility:hidden;
+  }
+  .btn-text.visible{visibility:visible;}
+  .btn-text:hover{color:var(--coral);}
+
+  /* Results */
+  .hidden{display:none;}
+  .result-header{
+    text-align:center;
+    margin-bottom:22px;
+  }
+  .result-header h2{
+    font-size:15px;
+    color:var(--text-soft);
+    font-weight:500;
+    margin:0 0 4px;
+  }
+  .result-header h1{
+    font-family:'Fredoka',sans-serif;
+    font-size:34px;
+    margin:0;
+    font-weight:600;
+  }
+
+  .bars{
+    background:var(--card);
+    border-radius:18px;
+    padding:22px 24px;
+    box-shadow:0 1px 3px rgba(20,20,10,0.06);
+    margin-bottom:18px;
+  }
+  .bar-row{
+    display:grid;
+    grid-template-columns:140px 1fr 34px;
+    align-items:center;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .bar-row:last-child{margin-bottom:0;}
+  .bar-label{
+    font-size:13.5px;
+    font-weight:600;
+  }
+  .bar-track{
+    height:12px;
+    background:var(--line);
+    border-radius:99px;
+    overflow:hidden;
+  }
+  .bar-fill{
+    height:100%;
+    border-radius:99px;
+    transition:width .6s ease;
+  }
+  .bar-value{
+    font-size:13px;
+    color:var(--text-soft);
+    text-align:right;
+    font-weight:600;
+  }
+
+  .restitution{
+    background:var(--card);
+    border-left:4px solid var(--accent, var(--coral));
+    border-radius:0 18px 18px 0;
+    padding:20px 22px;
+    margin-bottom:18px;
+    font-size:15px;
+    line-height:1.7;
+    font-style:italic;
+    color:var(--text);
+    box-shadow:0 1px 3px rgba(20,20,10,0.05);
+  }
+
+  .composite-note{
+    font-size:13.5px;
+    color:var(--text-soft);
+    text-align:center;
+    margin:-8px 0 18px;
+    padding:14px 20px;
+    line-height:1.6;
+    background:#FFFDF9;
+    border:1px dashed var(--line);
+    border-radius:14px;
+  }
+  .composite-note p{margin:0 0 8px;}
+  .composite-note p:last-child{margin-bottom:0;}
+
+  .section-card{
+    background:var(--card);
+    border-radius:18px;
+    padding:22px 24px;
+    box-shadow:0 1px 3px rgba(20,20,10,0.05);
+    margin-bottom:16px;
+  }
+  .section-card h3{
+    font-size:15px;
+    margin:0 0 12px;
+    font-weight:700;
+    color:var(--navy);
+  }
+  .fw-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+  }
+  .fw-grid ul{
+    margin:0;
+    padding-left:18px;
+    font-size:14px;
+    line-height:1.75;
+  }
+  .fw-grid .label{
+    font-size:12.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    color:var(--text-soft);
+    margin-bottom:6px;
+    display:block;
+  }
+
+  .tips-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  .tips-col h4{
+    font-size:13.5px;
+    margin:0 0 10px;
+    font-weight:700;
+  }
+  .tips-col ol{
+    margin:0;
+    padding-left:18px;
+    font-size:13.5px;
+    line-height:1.65;
+  }
+  .tips-col li{margin-bottom:8px;}
+  .tips-col.amp h4{color:var(--teal);}
+  .tips-col.control h4{color:var(--navy);}
+
+  @media (max-width:480px){
+    .fw-grid, .tips-grid{grid-template-columns:1fr;}
+    .bar-row{grid-template-columns:96px 1fr 30px;}
+    h1.title{font-size:20px;}
+    .result-header h1{font-size:24px;}
+  }
+
+  .restart-wrap{
+    text-align:center;
+    margin-top:8px;
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .btn-restart{
+    background:var(--coral);
+    color:#fff;
+    border:none;
+    border-radius:99px;
+    padding:13px 28px;
+    font-size:14.5px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .btn-restart:hover{background:#D94A2D;}
+  .btn-download{
+    background:#fff;
+    color:var(--navy);
+    border:1.5px solid var(--navy);
+    border-radius:99px;
+    padding:13px 28px;
+    font-size:14.5px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .btn-download:hover{background:#F5F2EC;}
+  .btn-download:disabled{opacity:0.6; cursor:default;}
+  .download-note{
+    text-align:center;
+    font-size:12.5px;
+    color:var(--text-soft);
+    margin-top:10px;
+  }
+
+  /* Identity form */
+  .id-field{
+    margin-bottom:16px;
+  }
+  .id-field label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--text);
+    margin-bottom:6px;
+  }
+  .id-field input, .id-field select{
+    width:100%;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    padding:11px 13px;
+    font-size:14.5px;
+    font-family:inherit;
+    color:var(--text);
+    background:#FFFDF9;
+  }
+  .id-field input:focus, .id-field select:focus{
+    outline:none;
+    border-color:var(--coral);
+  }
+  .id-note{
+    font-size:13px;
+    color:var(--text-soft);
+    margin:-4px 0 20px;
+    line-height:1.5;
+  }
+  .id-error{
+    font-size:13px;
+    color:var(--coral);
+    font-weight:600;
+    min-height:18px;
+    margin:0 0 6px;
+  }
+  .btn-start{
+    background:var(--coral);
+    color:#fff;
+    border:none;
+    border-radius:99px;
+    padding:14px 28px;
+    font-size:15px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    width:100%;
+    margin-top:6px;
+  }
+  .btn-start:hover{background:#D94A2D;}
+  .participant-summary{
+    text-align:center;
+    font-size:13px;
+    color:var(--text-soft);
+    margin-bottom:6px;
+  }
+  .id-time{
+    text-align:center;
+    font-size:13px;
+    color:var(--text-soft);
+    margin:-4px 0 20px;
+  }
+  .consent-field{
+    margin-bottom:18px;
+  }
+  .consent-label{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    font-size:13px;
+    line-height:1.5;
+    color:var(--text-soft);
+    cursor:pointer;
+  }
+  .consent-label input{
+    margin-top:3px;
+    width:16px;
+    height:16px;
+    flex-shrink:0;
+    accent-color:var(--coral);
+  }
+  .submit-status{
+    text-align:center;
+    font-size:13px;
+    font-weight:600;
+    margin:0 0 16px;
+    color:var(--text-soft);
+  }
+  .submit-status.sent{color:var(--teal);}
+  .btn-whatsapp{
+    background:#25D366;
+    color:#fff;
+    border:none;
+    border-radius:99px;
+    padding:13px 28px;
+    font-size:14.5px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .btn-whatsapp:hover{background:#1EBE5A;}
+  .closing-text{
+    text-align:center;
+    font-size:14px;
+    line-height:1.7;
+    color:var(--text-soft);
+    padding:4px 10px 6px;
+    margin-bottom:6px;
+  }
+  .app-footer{
+    text-align:center;
+    font-size:11px;
+    color:#B9AF9E;
+    margin-top:26px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="sticker heart">♥</div>
+    <div class="sticker dot1"></div>
+    <div class="sticker dot2"></div>
+    <p class="eyebrow">La Pause · Femmes d'Impact</p>
+    <h1 class="title" id="headerTitle">Tempéraments &amp; charge mentale</h1>
+    <p class="intro-text" id="headerIntro">Avant de commencer, dis-nous qui tu es — ces informations restent confidentielles et servent juste à personnaliser ton résultat.</p>
+  </div>
+
+  <div id="identityView">
+    <div class="card">
+      <p class="id-time">⏱ Ça prend environ 5 minutes</p>
+      <div class="id-field">
+        <label>Nom &amp; Prénoms *</label>
+        <input type="text" id="idName" placeholder="Ex : Awa Koffi">
+      </div>
+      <div class="id-field">
+        <label>Téléphone *</label>
+        <input type="tel" id="idPhone" placeholder="Ex : 01 97 XX XX XX">
+      </div>
+      <div class="id-field">
+        <label>Adresse e-mail</label>
+        <input type="email" id="idEmail" placeholder="Ex : awa@email.com">
+      </div>
+      <div class="id-field">
+        <label>Église / communauté</label>
+        <input type="text" id="idChurch" placeholder="Ex : Centre Sion">
+      </div>
+      <div class="id-field">
+        <label>Statut</label>
+        <select id="idStatus">
+          <option value="">Sélectionner...</option>
+          <option>Mariée</option>
+          <option>Célibataire</option>
+          <option>Mère de famille</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div class="id-field">
+        <label>Tranche d'âge</label>
+        <select id="idAge">
+          <option value="">Sélectionner...</option>
+          <option>18-25 ans</option>
+          <option>26-35 ans</option>
+          <option>36-45 ans</option>
+          <option>46-55 ans</option>
+          <option>56 ans et plus</option>
+        </select>
+      </div>
+      <div class="id-field consent-field">
+        <label class="consent-label">
+          <input type="checkbox" id="idConsent">
+          <span>J'accepte que ces informations soient utilisées dans le cadre de cet atelier.</span>
+        </label>
+      </div>
+      <p class="id-error" id="idError"></p>
+      <button class="btn-start" id="startBtn">Commencer le test</button>
+    </div>
+  </div>
+
+  <div id="quizView" class="hidden">
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:5%"></div></div>
+      <span class="progress-label" id="progressLabel">1 / 20</span>
+    </div>
+
+    <div class="card">
+      <p class="q-text" id="qText"></p>
+      <div class="options" id="qOptions"></div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-text" id="backBtn">← Question précédente</button>
+    </div>
+  </div>
+
+  <div id="tiebreakView" class="hidden">
+    <div class="card">
+      <p class="q-text">Une dernière question pour départager tes deux tempéraments les plus proches</p>
+      <div class="options" id="tbOptions"></div>
+    </div>
+  </div>
+
+  <div id="resultView" class="hidden"></div>
+
+  <p class="app-footer">Copyright Femmes d'Impact — Cotonou</p>
+
+</div>
+
+<script>
+const questions = [
+  { q:"Quand plusieurs tâches urgentes tombent en même temps, je...", o:[
+    "Je prends les devants et je décide vite, quitte à trancher seule",
+    "Je cherche à qui en parler pour trouver de l'énergie et de l'aide",
+    "Je fais tout, une chose après l'autre, sans faire de bruit",
+    "Je fais d'abord une liste précise pour ne rien oublier"]},
+  { q:"Quand on me demande un service que je n'ai pas vraiment le temps de faire, je...", o:[
+    "Je dis non directement si ça ne m'arrange pas",
+    "J'ai du mal à dire non, j'ai peur de décevoir",
+    "J'accepte, même si je sais que ça va me peser",
+    "J'accepte seulement si je peux le faire bien, sinon je refuse"]},
+  { q:"Face à un imprévu qui bouscule mon programme, je...", o:[
+    "Je m'adapte vite et je reprends le contrôle",
+    "Je m'enthousiasme pour la nouveauté, quitte à tout réorganiser dans la joie",
+    "Je suis déstabilisée, j'ai besoin d'un temps pour me réajuster",
+    "Je suis contrariée que le plan prévu ne soit pas respecté"]},
+  { q:"Dans un groupe, je suis plutôt du genre à...", o:[
+    "Prendre la direction naturellement",
+    "Animer, faire rire, motiver les autres",
+    "Écouter et soutenir sans chercher à être au centre",
+    "Observer et analyser avant de parler"]},
+  { q:"Quand je suis fatiguée, je...", o:[
+    "J'accélère encore plus pour \"en finir\"",
+    "Je cherche du réconfort auprès des autres",
+    "Je me referme et j'encaisse en silence",
+    "Je m'isole pour reprendre le contrôle de mes affaires"]},
+  { q:"Ce qui m'épuise le plus, c'est...", o:[
+    "De ne pas pouvoir avancer aussi vite que je le voudrais",
+    "De me sentir seule ou incomprise",
+    "De porter les tensions des autres sans jamais me plaindre",
+    "De ne pas avoir fait les choses parfaitement"]},
+  { q:"Quand je délègue une tâche, je...", o:[
+    "Je le fais rarement, je préfère contrôler moi-même",
+    "Je délègue facilement mais je n'assure pas toujours le suivi",
+    "J'ai du mal à demander, je préfère faire moi-même pour ne déranger personne",
+    "Je délègue seulement si je suis sûre que ce sera fait comme il faut"]},
+  { q:"Face à un conflit, je...", o:[
+    "Je l'affronte directement, sans détour",
+    "J'essaie de désamorcer avec de l'humour ou de la relation",
+    "J'évite autant que possible, ça me pèse longtemps après",
+    "J'analyse d'abord ce qui s'est vraiment passé avant de réagir"]},
+  { q:"Mon rythme naturel de travail est...", o:[
+    "Rapide, orienté résultat",
+    "Enthousiaste, mais parfois dispersé",
+    "Régulier, posé, sans à-coups",
+    "Méthodique, avec des étapes précises"]},
+  { q:"Ce qui me donne le plus d'énergie, c'est...", o:[
+    "Relever un défi et gagner",
+    "Être entourée, échanger, célébrer",
+    "Une ambiance calme et stable",
+    "Un travail bien fait, avec de la rigueur"]},
+  { q:"Quand je rate quelque chose, je...", o:[
+    "Je passe vite à autre chose, je n'aime pas ressasser",
+    "Je culpabilise un peu mais ça passe vite si je peux en parler",
+    "Je le garde pour moi longtemps",
+    "Je rumine et cherche ce qui n'allait pas dans les détails"]},
+  { q:"Dans mon emploi du temps actuel, j'ai tendance à...", o:[
+    "Multiplier les projets, je n'aime pas être au repos",
+    "Dire oui à trop d'engagements sociaux et communautaires",
+    "Prendre sur moi les charges des autres",
+    "Passer trop de temps à peaufiner ce qui pourrait rester simple"]},
+  { q:"Face à une décision difficile, je...", o:[
+    "Je décide vite, seule si besoin",
+    "Je demande l'avis de plusieurs personnes autour de moi",
+    "Je prends du temps, je n'aime pas décider sous pression",
+    "Je recherche toutes les informations avant de trancher"]},
+  { q:"On dit souvent de moi que je suis...", o:[
+    "Déterminée, parfois impatiente",
+    "Chaleureuse, parfois désorganisée",
+    "Fiable, parfois trop discrète sur mes besoins",
+    "Rigoureuse, parfois trop exigeante avec moi-même"]},
+  { q:"Quand je me sens débordée, le premier signe chez moi est...", o:[
+    "L'irritabilité, l'impatience envers les autres",
+    "La dispersion, je n'arrive plus à me concentrer",
+    "La fatigue silencieuse, je n'en parle pas",
+    "L'anxiété liée au sentiment de ne pas avoir bien fait"]},
+  { q:"Prendre du repos, pour moi...", o:[
+    "C'est presque une perte de temps",
+    "C'est plus facile si c'est avec d'autres personnes",
+    "C'est nécessaire, mais je culpabilise souvent de le prendre",
+    "C'est difficile tant que tout n'est pas terminé et en ordre"]},
+  { q:"Dans mon couple et ma famille, je...", o:[
+    "Prends facilement les décisions pour tout le monde",
+    "Mets de l'ambiance et de la chaleur, mais j'oublie parfois l'organisation",
+    "Assure la stabilité, souvent en silence, sans le dire",
+    "Veille à ce que tout soit bien fait, parfois au prix de tensions"]},
+  { q:"Ce qui m'aide vraiment à récupérer, c'est...", o:[
+    "Accomplir quelque chose de concret, vite",
+    "Passer du temps avec des gens que j'aime",
+    "Un moment de calme, seule, sans sollicitation",
+    "Mettre de l'ordre, tout remettre en place"]},
+  { q:"Si je devais changer une chose dans ma façon de fonctionner, ce serait...", o:[
+    "Apprendre à ralentir et à écouter davantage",
+    "Apprendre à mieux m'organiser et à finir ce que je commence",
+    "Apprendre à exprimer mes besoins et à dire non",
+    "Apprendre à lâcher prise sur les détails"]},
+  { q:"Face à une charge de travail qui augmente, ma tendance naturelle est de...", o:[
+    "En faire encore plus, sans demander d'aide",
+    "Accepter plus de responsabilités par enthousiasme, puis me sentir dépassée",
+    "Tout absorber en silence jusqu'à l'épuisement",
+    "Vouloir tout faire parfaitement, ce qui allonge encore la charge"]}
+];
+
+// index 0->D, 1->I, 2->S, 3->C, consistent across every question
